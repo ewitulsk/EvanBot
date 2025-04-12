@@ -25,10 +25,6 @@ module.exports = {
     async execute(interaction) {
         let connection = null; // Declare connection here
 
-        // Check if the command is used in the target channel
-        if (interaction.channelId !== process.env.CHANNEL_ID) {
-            return interaction.reply({ content: `This command can only be used in the designated channel.`, ephemeral: true });
-        }
 
         // Check if the user is in a voice channel
         const member = interaction.member;

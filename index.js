@@ -49,15 +49,6 @@ client.on(Events.InteractionCreate, async interaction => {
         return;
     }
 
-    // Check if the interaction is in the allowed channel
-    if (interaction.channelId !== process.env.CHANNEL_ID) {
-         // Silently ignore commands not in the specified channel, 
-         // the command file itself also checks and replies ephemerally.
-        console.log(`Command ${interaction.commandName} used outside of allowed channel ${process.env.CHANNEL_ID} by ${interaction.user.tag}. Ignoring.`);
-        // Optionally, send an ephemeral reply from here too, but the command does it.
-        // await interaction.reply({ content: `This command can only be used in the designated channel.`, ephemeral: true });
-        return; 
-    }
 
     try {
         await command.execute(interaction);
