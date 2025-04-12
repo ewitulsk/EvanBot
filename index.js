@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 const dotenv = require('dotenv');
-const { playTextToSpeech } = require('./tts-logic');
+const { playTextToSpeech, findMostPopulatedVoiceChannel } = require('./tts-logic');
 
 dotenv.config();
 
@@ -71,13 +71,11 @@ client.on(Events.MessageCreate, async message => {
 
     // Ignore messages from bots (including self)
     if (message.author.bot) {
-        console.log('[MessageCreate] Ignoring message from bot.');
         return;
     }
 
     // Ensure client.user is ready before using its ID
     if (!client.user) {
-        console.log('[MessageCreate] Client user not ready yet, ignoring message.');
         return;
     }
 
@@ -91,47 +89,38 @@ client.on(Events.MessageCreate, async message => {
     console.log(`[MessageCreate] Is ping? ${isPing}`);
 
     if (isPing) {
-        // Extract the text after the ping
         const textToSpeak = message.content.replace(pingRegex, '').trim();
-        console.log(`[MessageCreate] Extracted text: "${textToSpeak}"`);
+        if (!textToSpeak) return;
 
-        if (!textToSpeak) {
-            console.log('[MessageCreate] No text found after ping.');
-            // Optional: Reply if there's no text after the ping
-            // message.reply('You need to provide some text after pinging me!');
-            return;
-        }
-
-        // Check if the user who sent the message is in a voice channel
         const member = message.member;
-        if (!member) {
-            console.log('[MessageCreate] Could not find member object.');
-            return; // Should not happen in guild messages
-        }
-        const voiceChannel = member.voice.channel;
-        console.log(`[MessageCreate] User ${member.user.tag} in voice channel: ${voiceChannel ? voiceChannel.name : 'None'}`);
+        if (!member) return;
+        const guild = message.guild;
+        if (!guild) return; // Should not happen, but good check
 
+        let voiceChannel = member.voice.channel;
+
+        // If user is not in a channel, find the most populated one
         if (!voiceChannel) {
-            console.log('[MessageCreate] User not in a voice channel.');
-            // Optional: Reply if the user is not in a voice channel
-            // message.reply('You need to be in a voice channel for me to speak!');
-            return;
+            console.log('[PingHandler] User not in VC, finding most populated...');
+            voiceChannel = findMostPopulatedVoiceChannel(guild);
+            if (!voiceChannel) {
+                console.log('[PingHandler] No populated VC found, ignoring ping.');
+                return; // Silently ignore if no one is in any VC
+            }
+            console.log(`[PingHandler] Found most populated channel: ${voiceChannel.name}`);
         }
 
         // Attempt to play the TTS
-        console.log(`[MessageCreate] Attempting TTS for "${textToSpeak}" in channel ${voiceChannel.name}`);
         try {
-            const success = await playTextToSpeech(textToSpeak, voiceChannel, message.guild);
-            console.log(`[MessageCreate] TTS success: ${success}`);
-            // Optionally react to the message to indicate success/failure
+            const success = await playTextToSpeech(textToSpeak, voiceChannel, guild);
             if (success) {
-                await message.react('🔊'); // Example reaction
+                await message.react('🔊');
             } else {
                 await message.react('❌');
             }
         } catch (error) {
             console.error('[MessageCreate] Error processing ping TTS:', error);
-            await message.react('⚠️'); // Indicate an unexpected error
+            await message.react('⚠️');
         }
     }
 });

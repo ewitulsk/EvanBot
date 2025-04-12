@@ -3,6 +3,7 @@ const { ElevenLabsClient } = require("elevenlabs");
 const fs = require('node:fs');
 const path = require('node:path');
 const dotenv = require('dotenv');
+const { ChannelType } = require('discord.js');
 
 dotenv.config();
 
@@ -83,4 +84,25 @@ async function playTextToSpeech(text, voiceChannel, guild) {
     }
 }
 
-module.exports = { playTextToSpeech }; 
+function findMostPopulatedVoiceChannel(guild) {
+    if (!guild) return null;
+
+    let mostPopulatedChannel = null;
+    let maxMembers = 0;
+
+    // Iterate over all channels in the guild cache
+    guild.channels.cache.forEach(channel => {
+        // Check if it's a voice channel and has members
+        if (channel.type === ChannelType.GuildVoice && channel.members.size > 0) {
+            if (channel.members.size > maxMembers) {
+                maxMembers = channel.members.size;
+                mostPopulatedChannel = channel;
+            }
+        }
+    });
+
+    console.log(`[findMostPopulated] Found channel: ${mostPopulatedChannel?.name} with ${maxMembers} members`);
+    return mostPopulatedChannel; // Returns the channel object or null
+}
+
+module.exports = { playTextToSpeech, findMostPopulatedVoiceChannel }; 
