@@ -3,6 +3,7 @@ const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 const dotenv = require('dotenv');
 const { playTextToSpeech, findMostPopulatedVoiceChannel } = require('./tts-logic');
+const { isGuildRecording } = require('./recording-logic');
 
 dotenv.config();
 
@@ -80,13 +81,9 @@ client.on(Events.MessageCreate, async message => {
     }
 
     // Check if the message starts with a ping to the bot
-    const regexString = `^<@!?${client.user.id}>\\s+`; // Use double backslash \s -> literal \s for RegExp
-    console.log(`[MessageCreate] Regex String: "${regexString}"`); // Log the string before RegExp constructor
+    const regexString = `^<@!?${client.user.id}>\\s+`;
     const pingRegex = new RegExp(regexString);
-    console.log(`[MessageCreate] Checking content against regex: ${pingRegex}`);
-    console.log(`[MessageCreate] Message content for test: "${message.content}"`); // Log content being tested
     const isPing = pingRegex.test(message.content);
-    console.log(`[MessageCreate] Is ping? ${isPing}`);
 
     if (isPing) {
         const textToSpeak = message.content.replace(pingRegex, '').trim();
@@ -95,7 +92,7 @@ client.on(Events.MessageCreate, async message => {
         const member = message.member;
         if (!member) return;
         const guild = message.guild;
-        if (!guild) return; // Should not happen, but good check
+        if (!guild) return;
 
         let voiceChannel = member.voice.channel;
 
@@ -114,13 +111,13 @@ client.on(Events.MessageCreate, async message => {
         try {
             const success = await playTextToSpeech(textToSpeak, voiceChannel, guild);
             if (success) {
-                await message.react('🔊');
+                await message.react('🔊').catch(e => console.error("[PingHandler] Failed to react success:", e));
             } else {
-                await message.react('❌');
+                await message.react('❌').catch(e => console.error("[PingHandler] Failed to react failure:", e));
             }
         } catch (error) {
-            console.error('[MessageCreate] Error processing ping TTS:', error);
-            await message.react('⚠️');
+            console.error('[PingHandler] Error processing ping TTS:', error);
+            await message.react('⚠️').catch(e => console.error("[PingHandler] Failed to react error:", e));
         }
     }
 });
