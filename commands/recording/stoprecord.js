@@ -37,10 +37,19 @@ module.exports = {
             const savedFiles = await stopGuildRecording(guild.id); // This function now handles connection.destroy()
             console.log(`[StopRecordCmd] stopGuildRecording completed for guild ${guild.id}. Files saved: ${savedFiles.length}`);
 
+            if (savedFiles.length > 0) {
+                await interaction.editReply(`Finished Command`);
+                // Optionally list files, but this might get long:
+                // const fileBasenames = savedFiles.map(f => path.basename(f));
+                // await interaction.followUp({ content: `Files saved:\n- ${fileBasenames.join('\n- ')}`, ephemeral: true });
+            } else {
+                await interaction.editReply('Finished Command');
+            }
+
         } catch (error) {
             console.error('[StopRecordCmd] Error stopping recording:', error);
             // stopGuildRecording should handle cleanup even on error, so just inform the user.
-            await interaction.editReply({ content: 'An error occurred while stopping the recording. Some files might not have been saved correctly.', ephemeral: true });
+            await interaction.editReply({ content: 'Error With Command', ephemeral: true });
         }
     },
 };

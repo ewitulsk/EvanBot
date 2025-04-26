@@ -87,7 +87,7 @@ module.exports = {
                 }
             });
             
-            // await interaction.editReply({ content: `Started recording in ${voiceChannel.name}. Use /stoprecord to finish.` }); // Removed this line
+            await interaction.editReply({ content: `Command Started.` });
 
         } catch (error) {
             console.error('[RecordCmd] Error starting recording:', error);
@@ -101,7 +101,7 @@ module.exports = {
                      console.log("[RecordCmd] Recording appears active despite error, not destroying connection.")
                  }
             }
-            await interaction.editReply({ content: 'Failed to start recording. Please check permissions and try again.', ephemeral: true });
+            await interaction.editReply({ content: 'Failed to start run command. Please check permissions and try again.', flags: [1 << 6] /* MessageFlags.Ephemeral */ });
         }
     },
 }; 
