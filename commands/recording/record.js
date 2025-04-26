@@ -87,7 +87,7 @@ module.exports = {
                 }
             });
             
-            await interaction.editReply({ content: `Started recording in ${voiceChannel.name}. Use /stoprecord to finish.` });
+            // await interaction.editReply({ content: `Started recording in ${voiceChannel.name}. Use /stoprecord to finish.` }); // Removed this line
 
         } catch (error) {
             console.error('[RecordCmd] Error starting recording:', error);
