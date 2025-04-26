@@ -158,11 +158,16 @@ async function stopUserRecording(guildId, userId) {
     console.log(`[Recorder] Processing PCM temp file ${tempFilename} to ${outputFilename}`);
 
     return new Promise((resolve, reject) => {
+        // Specify input file first, then apply input options to it
         ffmpeg(tempFilename)
-            // Tell ffmpeg the input is raw PCM, decoded by prism-media (usually s16le)
-            .inputFormat('s16le') // Change back to s16le as prism-media likely outputs this
-            .audioFrequency(48000)
-            .audioChannels(2)
+            .inputOptions([
+                '-f', 's16le',       // Input format: signed 16-bit little-endian PCM
+                '-ar', '48000',      // Input sample rate: 48kHz
+                '-ac', '2'          // Input channels: stereo
+            ])
+            // --- Output options remain the same ---
+            .audioFrequency(48000) // Output sample rate
+            .audioChannels(2)       // Output channels
             .toFormat('mp3')
             .on('error', (err) => {
                 console.error(`[Recorder] FFmpeg error processing ${tempFilename} for ${userId}:`, err);
